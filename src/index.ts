@@ -1,31 +1,27 @@
 import dotenv from 'dotenv';
-import { requireAuth } from './middleware/authMiddleware';
+import path from 'path'; // 🛡️ FIX: path must be imported before it is used
+
 // Force dotenv to load from the absolute root path
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import fs from 'fs';
-import path from 'path';
 import cron from 'node-cron';
+
+import { requireAuth } from './middleware/authMiddleware';
 import { prisma } from './db/prisma';
 import { runAnalysis, handleFollowupQuery, cleanDataset } from './controllers/analysisController';
 import { getSessionHistory, getSessionById, exportReportToWord, deleteSessionById } from './controllers/sessionControllers';
 import { googleLogin, registerWithEmail, loginWithEmail } from './controllers/authController';
 import { mockUpgrade } from './controllers/paymentController';
-
 import { getWalletStatus, toggleDemoTier } from './controllers/walletController';
 
-
-// Add these to your routes section:
-
-
 // 🛡️ 1. Boot up the background worker
-
 import './queue/analysisWorker';
 // 🛡️ 2. Import the queue events listener for the live stream
 import { analysisQueueEvents } from './queue/analysisWorker';
-
 
 
 if (!fs.existsSync('uploads')) {
