@@ -1,0 +1,83 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 🛡️ SaaS Token Wallet Additions
+enum Tier {
+  FREE
+  PRO
+}
+
+model User {
+  id           String    @id @default(uuid())
+  
+  // 🛡️ Both authentication methods are now optional to allow flexibility
+  googleId     String?   @unique 
+  password     String?   
+  
+  email        String    @unique
+  name         String
+  avatar       String?
+  
+  tier         Tier      @default(FREE)
+  tokenBalance Int       @default(500) 
+  
+  sessions     Session[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  title     String   @default("New Analysis")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 🛡️ Ephemeral Sessions (Null for PRO, 24hrs for FREE)
+  expiresAt DateTime?
+
+  // 🛡️ User Wallet Relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 🛡️ Existing Relations
+  dataset   Dataset?
+  dashboard Dashboard?
+  messages  ChatMessage[] // 👈 Restored to fix the P1012 error
+}
+
+model Dataset {
+  id             String  @id @default(uuid())
+  sessionId      String  @unique
+  session        Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  filePath       String
+  originalName   String
+  schemaSnapshot String?
+}
+
+model Dashboard {
+  id               String  @id @default(uuid())
+  sessionId        String  @unique
+  session          Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  summary          String
+  detailedReport   String?
+  dataPayload      Json
+  availableFilters Json
+  charts           Json
+  anomalies        Json
+  recommendations  Json
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+}

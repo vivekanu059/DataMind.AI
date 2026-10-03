@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-slate-100 font-sans antialiased selection:bg-accent-blue/30 selection:text-blue-200 min-h-screen;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+  }
+}
+
+.glass-card {
+  @apply bg-surface/70 backdrop-blur-xl border border-border/60 rounded-2xl shadow-xl;
+}
+
+.glass-pill {
+  @apply bg-surfaceLight/50 backdrop-blur-md border border-border/40 rounded-full;
+}
