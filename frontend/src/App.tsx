@@ -11,7 +11,7 @@ import { Dashboard } from './components/Dashboard';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 
 const AgentStatusWithProps = AgentStatus as React.ComponentType<{ statusMessage: string; stage: string; }>;
-const API = 'http://localhost:3000';
+const API = 'https://datamind-ai-api-gvix.onrender.com';
 
 interface UserSession {
   id: string; name: string; email: string; avatar?: string;
@@ -367,7 +367,7 @@ export default function App() {
       const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
       const payload = isLoginMode ? { email, password } : { email, password, name };
       
-      const res = await fetch(`http://localhost:3000${endpoint}`, {
+      const res = await fetch(`${API}${endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       const data = await res.json();

@@ -17,7 +17,7 @@ interface Props {
   onSessionDeleted?: (sessionId: string) => void;
 }
 
-const API = 'http://localhost:3000';
+const API = 'https://datamind-ai-api-gvix.onrender.com';
 
 const GROUP_ORDER = ['Today', 'Yesterday', 'Previous 7 days', 'Older'] as const;
 type Group = (typeof GROUP_ORDER)[number];

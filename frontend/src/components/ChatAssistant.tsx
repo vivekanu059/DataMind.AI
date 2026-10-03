@@ -49,7 +49,7 @@ export const ChatAssistant: React.FC<Props> = ({ fileLocation, sessionId }) => {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:3000/api/chat', {
+      const res = await fetch('https://datamind-ai-api-gvix.onrender.com/api/chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
