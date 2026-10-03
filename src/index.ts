@@ -3,6 +3,7 @@ import path from 'path'; // 🛡️ FIX: path must be imported before it is used
 
 // Force dotenv to load from the absolute root path
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+import './queue/analysisWorker'; // This boots up the BullMQ worker alongside Express
 
 import express from 'express';
 import cors from 'cors';
