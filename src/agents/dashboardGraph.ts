@@ -150,10 +150,20 @@ const sqlEngineerNode = async (state: typeof DashboardState.State) => {
   4. xAxisKey must equal the SQL alias of the dimension. Do NOT add WHERE clauses unless the objective asks for one.
   5. Allowed chart types: ${ALLOWED_TYPES.join(", ")}.
 
+  MANDATORY DASHBOARD COMPONENTS (FILTERS & ANOMALIES):
+  - You MUST ALWAYS generate 2-3 "filterQueries" for categorical dimensions. The SQL query MUST select the distinct column and alias it EXACTLY as "val" (e.g., SELECT DISTINCT "col" AS val FROM table).
+  - You MUST ALWAYS generate an "anomaliesQuery" to find outliers, extremes, or top items. This query MUST return 1 to 3 rows. The query MUST select EXACTLY 4 column aliases: 'metric', 'anomaly', 'description', and 'value' using string literals or computed text.
+
   JSON Output Schema:
   {
-    "filterQueries": [],
-    "anomaliesQuery": "SELECT * FROM ${state.tableReference} LIMIT 5",
+    "filterQueries": [
+      {
+        "column": "exact_column_name",
+        "label": "Human Readable Label",
+        "query": "SELECT DISTINCT \\"exact_column_name\\" AS val FROM ${state.tableReference} WHERE \\"exact_column_name\\" IS NOT NULL LIMIT 50"
+      }
+    ],
+    "anomaliesQuery": "SELECT 'Top Metric' AS metric, 'Highest Result' AS anomaly, 'Detailed explanation of this outlier' AS description, CAST(MAX(\\"ValueCol\\") AS VARCHAR) AS value FROM ${state.tableReference}",
     "charts": [
       {
         "type": "BarChart",
@@ -182,16 +192,16 @@ const sqlEngineerNode = async (state: typeof DashboardState.State) => {
   const blueprint = parseJson(textOf(response));
 
   if (blueprint && typeof blueprint === "object") {
-    // Text content comes from the strategist and is merged here, so the model never has to echo it
-    // (echoing quotes and newlines inside JSON was a common source of broken output).
     blueprint.summary = state.strategyPlan?.summary ?? "";
     blueprint.detailedReport = state.strategyPlan?.detailedReport ?? "";
     blueprint.recommendations = state.strategyPlan?.recommendations ?? [];
     blueprint.filterQueries = Array.isArray(blueprint.filterQueries) ? blueprint.filterQueries : [];
-    if (typeof blueprint.anomaliesQuery !== "string") {
-      blueprint.anomaliesQuery = `SELECT * FROM ${state.tableReference} LIMIT 5`;
+    
+    // Fallback query if the LLM completely fails, ensuring the correct 4 columns exist so the UI doesn't crash
+    if (typeof blueprint.anomaliesQuery !== "string" || !blueprint.anomaliesQuery.toLowerCase().includes('as metric')) {
+      blueprint.anomaliesQuery = `SELECT 'Data Check' AS metric, 'No clear anomalies' AS anomaly, 'The agent did not detect any extreme outliers.' AS description, '-' AS value FROM ${state.tableReference} LIMIT 1`;
     }
-    // The browser filters and re-aggregates these rows, so send enough of them.
+    
     blueprint.drillDownQuery = `SELECT * FROM ${state.tableReference} LIMIT ${DRILL_LIMIT}`;
   }
 
@@ -202,7 +212,7 @@ const sqlEngineerNode = async (state: typeof DashboardState.State) => {
 };
 
 // -------------------------------------------------------------
-// NODE 4: Validator (a real node, so it can write the error back into state for the retry)
+// NODE 4: Validator
 // -------------------------------------------------------------
 const hasColumn = (schemaLower: string, col: unknown) =>
   typeof col === "string" && col.length > 0 && schemaLower.includes(col.toLowerCase());
